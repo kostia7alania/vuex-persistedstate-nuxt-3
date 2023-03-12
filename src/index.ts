@@ -14,7 +14,7 @@ interface Options<State> {
   reducer?: (state: State, paths: string[]) => object;
   subscriber?: (
     store: Store<State>
-    ) => (handler: (mutation: any, state: State) => void) => void;
+  ) => (handler: (mutation: any, state: State) => void) => void;
   storage?: Storage;
   getState?: (key: string, storage: Storage) => any;
   setState?: (key: string, state: any, storage: Storage) => void;
@@ -29,18 +29,25 @@ interface Options<State> {
 export default function <State>(
   options?: Options<State>
 ): (store: Store<State>) => void {
+  if (!process.client) {
+    return;
+  }
+
   options = options || {};
 
-  const storage = options.storage || (window && window.localStorage);
+  let storage = options.storage || (window && window.localStorage);
+
   const key = options.key || "vuex";
 
   function getState(key, storage) {
     const value = storage.getItem(key);
 
     try {
-      return (typeof value === "string")
-        ? JSON.parse(value) : (typeof value === "object")
-        ? value : undefined;
+      return typeof value === "string"
+        ? JSON.parse(value)
+        : typeof value === "object"
+        ? value
+        : undefined;
     } catch (err) {}
 
     return undefined;
